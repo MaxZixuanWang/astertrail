@@ -1,7 +1,7 @@
 'use strict';
 
 // tools/build.js replaces these values with the exact release contents.
-const RELEASE = 'f7f4785703fb5700';
+const RELEASE = '55a3672fe6392c28';
 const PRECACHE_PATHS = ["./.nojekyll","./DATA_SOURCES.md","./app.js","./assets/author.jpg","./assets/chime.wav","./data/catalog.js","./data/labels.js","./icons/apple-touch-icon.png","./icons/icon-192.png","./icons/icon-512.png","./icons/icon.svg","./index.html","./licenses/CC-BY-SA-4.0.txt","./licenses/DATA-NOTICE.txt","./licenses/OpenNGC-REUSE.txt","./licenses/pypinyin-MIT.txt","./manifest.webmanifest","./modules/astro.js","./modules/browser-media.js","./modules/browser-sensors.js","./modules/controller.js","./modules/i18n.js","./modules/renderer.js","./modules/search.js","./modules/sensors.js","./modules/web-copy.js","./styles/base.css","./styles/browser.css","./styles/sky.css","./styles/tokens.css"];
 const BASE = new URL('./', self.location.href);
 const CACHE_PREFIX = 'astertrail:' + BASE.pathname + ':';

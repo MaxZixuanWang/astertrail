@@ -35,27 +35,11 @@
 
 位置、偏好存放于本机浏览器，用于本机计算；相机画面不录制、不上传。应用本身没有账户、广告、分析统计或业务后台。托管网站服务仍可能记录普通网页访问日志。系统定位服务如何获取位置由设备和浏览器决定。
 
-## 开发与部署
-
-本项目是独立、无第三方运行依赖的静态网站：
-
-```text
-npm test
-npm run build
-npm start
-```
-
-本机地址为 `http://127.0.0.1:4180/`，仅供这台电脑使用。手机相机、方向和定位需通过 HTTPS 站点使用，不能把该本机地址当成手机网址。
-
-发布 `dist/` 的全部文件即可，支持根域名和子目录。可部署到 GitHub Pages、Cloudflare Pages 或其他静态网站托管服务。保持文件相对目录不变，`sw.js` 不应设置长期不可变缓存。
-
-源代码在 `app.js`、`modules/`、`styles/`；星表在 `data/`；离线与主屏幕配置在 `sw.js`、`manifest.webmanifest`。源码及静态发布包分别提供，均不依赖微信开发者工具。
-
-本仓库通过 GitHub Pages 发布 `main` 分支的 `docs/` 目录，无需登录即可访问。修改后运行 `npm test` 和 `npm run build:pages`，将源码与 `docs/` 一起提交，GitHub 会自动更新网站。正式地址为 https://maxzixuanwang.github.io/astertrail/ 。
-
 ## 作者与数据
 
-Max (Zixuan) Wang · BDIC 电子信息工程本科生、天文摄影爱好者。
+作者：Max (Zixuan) Wang、Liu Yinan。
+
+Max (Zixuan) Wang 是 BDIC 电子信息工程本科生、天文摄影爱好者。共同作者 Liu Yinan 在项目过程中提供了辅助与支持。
 
 感谢北京八中王文智老师提出这个项目最初的想法。
 
