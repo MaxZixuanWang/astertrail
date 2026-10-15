@@ -2,7 +2,8 @@
   'use strict';
   root.WebCopy = {
     zh: {
-      previewHint: '星图可拖动浏览 · 一键进入实景 AR', previewHelp: '手机可拖动、双指缩放星图；电脑可用鼠标和方向键。实景 AR 中请转动手机，不支持拖动和缩放。',
+      zoomLabel: '缩放倍率，上拉放大，下拉缩小',
+      previewHint: '星图可拖动浏览 · 一键进入实景 AR', previewHelp: '右侧滑条上拉放大、下拉缩小。星图也支持双指和滚轮缩放；电脑可用方向键。实景 AR 中转动手机找星，滑条会同步放大相机画面和星图。',
       previewCamera: 'AR 需要允许相机和方向访问。请在 Safari 或 Chrome 中打开 HTTPS 网页。相机画面和位置只在本机使用，不录制、不上传。方向和相机视角为近似值，适合辅助寻星。',
       browserLocation: '定位未成功，可以直接填写经纬度。', locating: '正在定位…',
       sensorWaiting: '正在等待方向信息…', sensorTilt: '先将手机稍微放平，再举起对准天空',
@@ -24,7 +25,8 @@
       dataSources: '星表来源与许可证', audioError: '请检查静音和音量；点击任意按钮后再试。', version: '网页版 · Astertrail 1.0'
     },
     en: {
-      previewHint: 'Drag to explore · Switch to live AR', previewHelp: 'Drag or pinch the sky map. On desktop, use your mouse or arrow keys. In live AR, turn your phone; dragging and zooming are disabled.',
+      zoomLabel: 'Zoom: slide up to magnify, down to widen',
+      previewHint: 'Drag to explore · Switch to live AR', previewHelp: 'Slide up to zoom in and down to zoom out. The chart also supports pinch, mouse-wheel zoom, and arrow keys. In live AR, turn your phone to find stars; the slider magnifies the camera image and chart together.',
       previewCamera: 'AR needs camera and orientation permission. Open the HTTPS website in Safari or Chrome. Camera frames and location stay on your device; nothing is recorded or uploaded. Direction and camera field of view are approximate.',
       browserLocation: 'Location unavailable. You can enter coordinates instead.', locating: 'Finding your location…',
       sensorWaiting: 'Waiting for orientation…', sensorTilt: 'Hold your phone nearly flat, then point its back at the sky.',

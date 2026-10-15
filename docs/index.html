@@ -21,7 +21,7 @@
     <div class="observer"><span class="view-heading" id="heading"></span><span id="sensor-hint" class="sensor-hint" role="status" hidden></span></div>
   </div>
   <div class="side-tools"><button class="side-button" id="settings" data-label="settings"><span class="side-icon settings-icon" aria-hidden="true"><span class="slider-line"></span><span class="slider-line"></span><span class="slider-line"></span></span><span class="side-label" data-text="settings"></span></button><button class="side-button" id="about" data-label="about"><span class="side-icon info-icon" aria-hidden="true">i</span><span class="side-label" data-text="about"></span></button></div>
-  <div class="floating-tools"><button class="tool" id="zoom-in" data-label="zoomIn">＋</button><button class="tool" id="zoom-out" data-label="zoomOut">−</button></div>
+  <div class="floating-tools"><output class="zoom-value" id="zoom-value" for="zoom">1.0×</output><div class="zoom-track"><input id="zoom" type="range" min="0.49" max="3.16" step="any" value="1" aria-orientation="vertical" data-label="zoomLabel"></div></div>
   <div class="celebration" id="celebration" role="status" hidden><div class="celebration-title" data-text="found"></div><div class="celebration-sub" id="celebration-sub"></div></div>
   <div class="bottom">
     <div class="target-panel" id="target-panel" hidden><div class="target-top"><div><div class="target-name" id="target-name"></div><div class="target-caption" id="target-caption"></div></div><div class="angle" id="angle"></div></div><div class="direction-prompt" id="direction-prompt"></div><div class="target-status"><span id="target-status"></span><button class="target-dismiss" id="dismiss-target" data-text="cancel"></button></div></div>

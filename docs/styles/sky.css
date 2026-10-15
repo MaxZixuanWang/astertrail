@@ -2,7 +2,7 @@
  * pre-emit critique: P4 H5 E4 S5 R5 V4 */
 .sky-app { position: fixed; inset: 0; width: 100%; height: 100%; overflow: clip; background: var(--color-paper); color: var(--color-ink); }
 .sky-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
-.sky-camera { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--color-paper); }
+.sky-camera { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; transform-origin: center; background: var(--color-paper); }
 .sky-camera { z-index: 0; }
 .sky-canvas { z-index: 1; }
 .simulator-image { width: 100%; height: 100%; pointer-events: none; }
@@ -39,10 +39,15 @@
 .observer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 12px; color: var(--color-muted); font-size: 11px; }
 .position { max-width: 70%; overflow: hidden; text-overflow: ellipsis; pointer-events: auto; background: transparent; color: var(--color-muted); min-height: 44px; font-size: 11px; text-align: left; }
 .view-heading { font-family: var(--font-number); white-space: nowrap; }
-.floating-tools { position: absolute; right: 16px; top: 44%; display: flex; flex-direction: column; gap: 0; padding: 3px; border-radius: var(--radius-pill); border: 1px solid var(--color-hairline); background: var(--color-glass); }
-.tool { width: 44px; height: 48px; border-radius: var(--radius-pill); background: var(--color-transparent); color: var(--color-ink); display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 300; }
-.tool.active { color: var(--color-accent); border-color: var(--color-accent); }
-.tool.small { font-size: 12px; }
+.floating-tools { position: absolute; right: 16px; top: 44%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; padding: 12px 3px 8px; border-radius: var(--radius-pill); border: 1px solid var(--color-hairline); background: var(--color-glass); }
+.zoom-value { color: var(--color-accent); font-size: 11px; font-variant-numeric: tabular-nums; line-height: 20px; }
+.zoom-track { position: relative; width: 44px; height: 136px; }
+#zoom { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); width: 136px; height: 44px; margin: 0; appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; touch-action: none; }
+#zoom::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: var(--color-rule); }
+#zoom::-moz-range-track { height: 3px; border-radius: 2px; background: var(--color-rule); }
+#zoom::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8.5px; border-radius: 50%; border: 2px solid var(--color-accent); background: var(--color-thumb); box-shadow: 0 2px 6px var(--color-scrim); }
+#zoom::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-accent); background: var(--color-thumb); box-shadow: 0 2px 6px var(--color-scrim); }
+#zoom:disabled { opacity: .4; cursor: wait; }
 .bottom { position: absolute; left: 16px; right: 16px; bottom: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
 .target-panel { padding: 17px 18px; border-radius: var(--radius-md); background: var(--color-panel); color: var(--color-ink); border: 1px solid var(--color-rule); }
 .target-top { display: flex; justify-content: space-between; align-items: start; gap: 8px; }

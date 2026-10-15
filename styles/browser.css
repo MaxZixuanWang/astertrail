@@ -40,9 +40,10 @@ dialog.sheet { overflow-y: auto; overscroll-behavior: contain; }
   .hud { right: auto; width: 320px; top: max(10px, env(safe-area-inset-top)); }
   .mast { margin-bottom: 8px; }.brand { font-size: 24px; }.clock { display: none; }
   .mode-switch { margin-bottom: 8px; }.searchbar { min-height: 44px; }
-  .bottom { left: auto; right: max(16px, env(safe-area-inset-right)); width: min(40%, 340px); bottom: max(12px, env(safe-area-inset-bottom)); }
+  .bottom { left: auto; right: calc(80px + env(safe-area-inset-right)); width: min(40%, 340px); bottom: max(12px, env(safe-area-inset-bottom)); }
   .side-tools { top: auto; bottom: max(16px, env(safe-area-inset-bottom)); flex-direction: row; }
-  .floating-tools { top: 20px; right: max(16px, env(safe-area-inset-right)); flex-direction: row; }
+  .floating-tools { top: 12px; right: max(16px, env(safe-area-inset-right)); transform: none; }
+  .zoom-track { height: 96px; } #zoom { width: 96px; }
   .welcome-title { font-size: 16px; }.welcome-sub, .help-line { font-size: 10px; }
   .search-dropdown { max-height: 45dvh; overflow: hidden; }.results { max-height: 34dvh; }
   .sensor-hint { max-width: 310px; }

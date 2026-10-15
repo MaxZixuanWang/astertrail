@@ -24,7 +24,7 @@ function eventTarget() {
 function element(id = '') {
   const classes = new Set();
   return Object.assign(eventTarget(), {
-    id, hidden: true, disabled: false, open: false, value: '', style: {}, dataset: {}, children: [],
+    id, hidden: true, disabled: false, open: false, value: '', style: { transform: '' }, dataset: {}, children: [],
     classList: {
       add(value) { classes.add(value); }, remove(value) { classes.delete(value); },
       toggle(value, enabled) { if (enabled) classes.add(value); else classes.delete(value); },
@@ -35,7 +35,7 @@ function element(id = '') {
     append(...children) { this.children.push(...children); },
     replaceChildren(...children) { this.children = children; },
     showModal() { this.open = true; }, close() { this.open = false; }, blur() {},
-    matches(selector) { return selector === 'input' && ['search', 'latitude', 'longitude'].includes(id); },
+    matches(selector) { return selector === 'input' && ['search', 'latitude', 'longitude', 'zoom'].includes(id); },
     setPointerCapture() {},
     getBoundingClientRect() { return { left: 0, top: 0, right: 375, bottom: 740, width: 375, height: 740 }; },
     getContext() { return { setTransform() {} }; }
@@ -118,7 +118,7 @@ test('enabling tracking waits for an actual pose, then follows the first bearing
   assert.equal(h.app.model.camera.roll, 8);
 });
 
-test('AR uses fixed camera FOV only after readiness and restores chart FOV on return', async () => {
+test('zoomed chart enters AR with matching video magnification and restores chart view on return', async () => {
   const h = harness();
   h.app.model.fov = 42;
   const starting = h.app.startAR();
@@ -126,12 +126,18 @@ test('AR uses fixed camera FOV only after readiness and restores chart FOV on re
   assert.equal(h.camera.starts, 1);
   assert.equal(h.app.model.ar, false);
   assert.equal(h.app.model.fov, 42);
-  assert.equal(h.get('zoom-in').disabled, true);
+  assert.equal(h.get('zoom').disabled, true);
   h.cameraRequests[0].resolve(true);
   await starting;
   assert.equal(h.app.model.ar, true);
   assert.equal(h.app.model.arReady, true);
-  assert.equal(h.app.model.fov, 70);
+  assert.equal(h.app.model.fov, 42);
+  const scale = Number(/^scale\(([^)]+)\)$/.exec(h.get('camera').style.transform)[1]);
+  const radians = Math.PI / 180;
+  const projectedOffset = fov => h.app.model.height / (2 * Math.tan(fov * radians / 2)) * Math.tan(10 * radians);
+  assert.ok(Math.abs(projectedOffset(70) * scale - projectedOffset(42)) < 0.01,
+    'camera pixels and sky projection must magnify equally away from the center');
+  assert.equal(h.get('zoom').disabled, false);
   assert.equal(h.get('camera').hidden, false);
   h.get('mode-sky').onclick();
   assert.equal(h.camera.stops, 1);
@@ -139,7 +145,86 @@ test('AR uses fixed camera FOV only after readiness and restores chart FOV on re
   assert.equal(h.app.model.arReady, false);
   assert.equal(h.app.model.fov, 42);
   assert.equal(h.get('camera').hidden, true);
-  assert.equal(h.get('zoom-in').disabled, false);
+  assert.equal(h.get('camera').style.transform, '');
+  assert.equal(h.get('zoom').disabled, false);
+});
+
+test('AR clamps a wide chart to the unzoomed camera and restores the wider chart on exit', async () => {
+  const h = harness();
+  h.app.model.fov = 110;
+  const starting = h.app.startAR();
+  h.cameraRequests[0].resolve(true);
+  await starting;
+  assert.equal(h.app.model.fov, 70);
+  assert.equal(h.get('camera').style.transform, 'scale(1)');
+  h.app.exitAR();
+  assert.equal(h.app.model.fov, 110);
+  assert.equal(h.get('camera').style.transform, '');
+});
+
+test('the zoom slider changes chart scale and AR camera scale together without overwriting chart zoom', async () => {
+  const h = harness();
+  const setZoom = value => { h.get('zoom').value = String(value); h.get('zoom').dispatch('input'); };
+  const fovAtScale = scale => 2 * Math.atan(Math.tan(35 * Math.PI / 180) / scale) * 180 / Math.PI;
+  setZoom(2);
+  assert.ok(Math.abs(h.app.model.fov - fovAtScale(2)) < 1e-8);
+  assert.equal(h.get('zoom-value').textContent, '2.0×');
+  assert.equal(h.get('camera').style.transform, '');
+  const chartFov = h.app.model.fov;
+  const starting = h.app.startAR();
+  setZoom(3);
+  assert.equal(h.app.model.fov, chartFov, 'disabled pending input cannot change the saved chart zoom');
+  h.cameraRequests[0].resolve(true);
+  await starting;
+  setZoom(3);
+  assert.ok(Math.abs(h.app.model.fov - fovAtScale(3)) < 1e-8);
+  const scale = Number(/^scale\(([^)]+)\)$/.exec(h.get('camera').style.transform)[1]);
+  assert.ok(Math.abs(scale - 3) < 1e-8);
+  assert.equal(h.get('zoom-value').textContent, '3.0×');
+  h.app.exitAR();
+  assert.equal(h.app.model.fov, chartFov);
+  assert.equal(h.get('zoom-value').textContent, '2.0×');
+  assert.equal(h.get('camera').style.transform, '');
+});
+
+test('zoom and pan gestures cannot alter the chart while camera permission is pending', async () => {
+  const h = harness();
+  h.app.model.fov = 42;
+  const heading = { ...h.app.model.camera };
+  const starting = h.app.startAR();
+  h.get('sky').dispatch('wheel', { deltaY: -300, preventDefault() {} });
+  h.window.dispatch('keydown', { target: h.get('sky'), key: '+', preventDefault() {} });
+  h.get('sky').dispatch('pointerdown', { pointerId: 1, clientX: 100, clientY: 200 });
+  h.get('sky').dispatch('pointermove', { pointerId: 1, clientX: 200, clientY: 300 });
+  assert.equal(h.app.model.fov, 42);
+  assert.deepEqual(h.app.model.camera, heading);
+  h.cameraRequests[0].resolve(true);
+  await starting;
+  assert.equal(h.app.model.fov, 42);
+});
+
+test('switching modes discards an unfinished chart drag', async () => {
+  const h = harness();
+  h.get('sky').dispatch('pointerdown', { pointerId: 1, clientX: 100, clientY: 200 });
+  const starting = h.app.startAR();
+  h.cameraRequests[0].resolve(true);
+  await starting;
+  h.app.exitAR();
+  const heading = { ...h.app.model.camera };
+  h.get('sky').dispatch('pointermove', { pointerId: 1, clientX: 300, clientY: 500 });
+  assert.deepEqual(h.app.model.camera, heading);
+});
+
+test('denied camera permission preserves chart zoom and leaves no camera magnification', async () => {
+  const h = harness();
+  h.app.model.fov = 25;
+  const starting = h.app.startAR();
+  h.cameraRequests[0].reject(new Error('NotAllowedError'));
+  await starting;
+  assert.equal(h.app.model.ar, false);
+  assert.equal(h.app.model.fov, 25);
+  assert.equal(h.get('camera').style.transform, '');
+  assert.equal(h.get('zoom').disabled, false);
 });
 
 test('unconfirmed location opens location entry without requesting sensors or camera', async () => {
@@ -171,7 +256,7 @@ test('cancelled pending AR cannot revive after a late camera grant', async () =>
   assert.equal(h.app.model.arReady, false);
   assert.equal(h.app.model.fov, 49);
   assert.equal(h.get('camera').hidden, true);
-  assert.equal(h.get('zoom-in').disabled, false);
+  assert.equal(h.get('zoom').disabled, false);
 });
 
 test('an old rejected AR request does not disturb a newer successful session', async () => {

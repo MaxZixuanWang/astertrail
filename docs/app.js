@@ -119,7 +119,28 @@
   });
   $('clear-search').onclick = () => { $('search').value = ''; closeSearch(); $('search').blur(); };
   $('dismiss-target').onclick = () => { model.select(null); $('celebration').hidden = true; lastUI = 0; };
-  $('zoom-in').onclick = () => { if (!model.ar) model.zoom(.8); }; $('zoom-out').onclick = () => { if (!model.ar) model.zoom(1.25); };
+  // Match the camera crop to the perspective projection, not to the FOV ratio.
+  const zoomForFov = fov => Math.tan(35 * Math.PI / 180) / Math.tan(fov * Math.PI / 360);
+  function syncZoom() {
+    const magnification = zoomForFov(model.fov), label = magnification.toFixed(1) + '×';
+    $('zoom').min = String(zoomForFov(model.ar ? 70 : 110));
+    $('zoom').max = String(zoomForFov(25)); $('zoom').value = String(magnification);
+    $('zoom').disabled = arStarting; $('zoom').setAttribute('aria-valuetext', label);
+    $('zoom-value').textContent = label;
+    $('camera').style.transform = model.ar ? 'scale(' + magnification + ')' : '';
+    lastUI = 0;
+  }
+  function zoomBy(factor) {
+    if (arStarting) return;
+    model.zoom(factor); if (model.ar) model.fov = Math.min(70, model.fov);
+    syncZoom();
+  }
+  $('zoom').addEventListener('input', () => {
+    const magnification = Number($('zoom').value);
+    if (arStarting || !Number.isFinite(magnification) || magnification <= 0) return;
+    const fov = 360 / Math.PI * Math.atan(Math.tan(35 * Math.PI / 180) / magnification);
+    zoomBy(fov / model.fov);
+  });
   $('lines').onclick = () => { model.lines = !model.lines; storage.set('xunxing.lines', model.lines); toggleState('lines', model.lines); };
   $('sound').onclick = () => { model.sound = !model.sound; storage.set('xunxing.sound', model.sound); toggleState('sound', model.sound); };
   $('settings').onclick = () => { closeSearch(); $('settings-dialog').showModal(); };
@@ -148,28 +169,28 @@
   let pinchDistance = null;
   function pan(dx, dy) { if (tracker.active) stopTracking(); model.pan(dx, dy); }
   canvas.addEventListener('pointerdown', event => {
-    closeSearch(); if (model.ar) return;
+    closeSearch(); if (model.ar || arStarting) return;
     touches.set(event.pointerId, {x: event.clientX, y: event.clientY});
     canvas.setPointerCapture(event.pointerId); pinchDistance = null;
   });
   canvas.addEventListener('pointermove', event => {
-    const previous = touches.get(event.pointerId); if (!previous || model.ar) return;
+    const previous = touches.get(event.pointerId); if (!previous || model.ar || arStarting) return;
     touches.set(event.pointerId, {x: event.clientX, y: event.clientY});
     if (touches.size === 1) pan(event.clientX - previous.x, event.clientY - previous.y);
     else {
       const [a,b] = [...touches.values()], distance = Math.hypot(a.x-b.x,a.y-b.y);
-      if (pinchDistance && distance > 4) model.zoom(pinchDistance/distance);
+      if (pinchDistance && distance > 4) zoomBy(pinchDistance/distance);
       pinchDistance = distance;
     }
   });
   function releasePointer(event) { touches.delete(event.pointerId); pinchDistance = null; }
   canvas.addEventListener('pointerup', releasePointer); canvas.addEventListener('pointercancel', releasePointer);
-  canvas.addEventListener('wheel', event => { event.preventDefault(); if (!model.ar) model.zoom(Math.exp(event.deltaY * .001)); }, { passive: false });
+  canvas.addEventListener('wheel', event => { event.preventDefault(); if (!model.ar) zoomBy(Math.exp(event.deltaY * .001)); }, { passive: false });
   window.addEventListener('keydown', event => {
-    if (event.target.matches('input') || document.querySelector('dialog[open]') || model.ar) return;
+    if (event.target.matches('input') || document.querySelector('dialog[open]') || model.ar || arStarting) return;
     const moves = { ArrowLeft: [28, 0], ArrowRight: [-28, 0], ArrowUp: [0, 28], ArrowDown: [0, -28] };
     if (moves[event.key]) { event.preventDefault(); pan(...moves[event.key]); }
-    if (event.key === '+' || event.key === '=') model.zoom(.8); if (event.key === '-') model.zoom(1.25);
+    if (event.key === '+' || event.key === '=') zoomBy(.8); if (event.key === '-') zoomBy(1.25);
   });
   model.onCelebrate = () => {
     $('app').classList.remove('shaking'); void $('app').offsetWidth; $('app').classList.add('shaking');
@@ -235,7 +256,7 @@
     $('follow').textContent = text(arStarting ? 'cameraStarting' : model.ar ? 'returnChart' : 'startAR');
     $('mode-hint').textContent = text(model.ar ? 'arHint' : 'previewHint');
     $('camera').hidden = !model.ar;
-    $('zoom-in').disabled = $('zoom-out').disabled = model.ar || arStarting;
+    syncZoom();
     $('app').classList.toggle('ar-mode', model.ar);
   }
   function startTracking() {
@@ -245,6 +266,7 @@
   function stopTracking() { tracker.stop(); model.setTracking(false); model.rawCamera = null; }
   function exitAR() {
     arGeneration++; arStarting = false; camera.stop();
+    touches.clear(); pinchDistance = null;
     if (model.ar) model.fov = previousFov;
     model.ar = false; model.arReady = false; model.holdSince = null; syncMode();
   }
@@ -256,11 +278,12 @@
     sound.unlock();
     // Invoke iOS permission in this click, before waiting for the camera promise.
     if (!tracker.active) startTracking();
+    previousFov = model.fov; touches.clear(); pinchDistance = null;
     arStarting = true; const token = ++arGeneration; syncMode();
     try {
       const ready = await camera.start();
       if (token !== arGeneration || !ready) return;
-      previousFov = model.fov; model.fov = 70; model.ar = true; model.arReady = true;
+      model.fov = Math.min(previousFov, 70); model.ar = true; model.arReady = true;
       arStarting = false; syncMode(); notify(text('cameraReady'));
     } catch (_) {
       if (token !== arGeneration) return;

@@ -14,7 +14,7 @@ A sky guide for your phone. Explore the star chart, then switch to rear-camera A
 4. Tap “Start AR stargazing” and allow orientation and camera access. First hold the phone roughly flat, then point its back toward the sky.
 5. Turn your phone to follow the arrow: red means outside the field of view, and green means inside. Hold the target within 1° of the center briefly for a visual and sound cue. Supported Android browsers also vibrate.
 
-You can also enable phone tracking in Settings and stay in the star chart. Computers without orientation sensors still support dragging and mouse-wheel zoom; the phone star chart supports pinch-to-zoom.
+Slide the zoom control on the right up to magnify or down to widen the view. You can also enable phone tracking in Settings and stay in the star chart. Computers without orientation sensors still support dragging and mouse-wheel zoom; the phone star chart supports pinch-to-zoom.
 
 ## Home screen and offline use
 
@@ -25,7 +25,8 @@ You can also enable phone tracking in Settings and stay in the star chart. Compu
 
 ## Orientation and camera
 
-- The app uses the rear camera and browser orientation sensors; it does not recognize stars in the camera image. AR uses an approximate 70° vertical field of view and is intended to help you find a direction.
+- The app uses the rear camera and browser orientation sensors; it does not recognize stars in the camera image. At 1×, AR uses an approximate 70° vertical field of view and is intended to help you find a direction.
+- A magnified chart keeps its zoom when entering AR, with matching digital zoom for the camera image and chart. AR stops at 1× when zooming out so it cannot show beyond the camera image. Returning to the chart restores its previous zoom. Digital zoom adds no camera detail, and the actual field of view still varies by device.
 - Android prefers absolute orientation; iPhone uses its compass to establish a heading reference. This reference is approximately magnetic north. There is no magnetic-declination model, and 1° accuracy is not guaranteed.
 - If absolute orientation is unavailable, the app asks you to calibrate: use a known direction or the system compass, point the rear camera due north, and confirm that the back of the phone faces north. Relative orientation is never silently treated as north.
 - Once you have identified the selected object in the real sky, you can point at it and calibrate in Settings. Do not perform this calibration based only on the on-screen arrow.
