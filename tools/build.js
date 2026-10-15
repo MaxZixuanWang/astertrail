@@ -34,7 +34,7 @@ function build(source = path.resolve(__dirname, '..'), destination = path.join(s
   const digest = crypto.createHash('sha256');
   for (const [file, contentsBuffer] of contents) digest.update(file).update('\0').update(contentsBuffer).update('\0');
   const version = digest.digest('hex').slice(0, 16);
-  const precache = files.filter(file => file !== 'sw.js').map(file => './' + file);
+  const precache = files.filter(file => file !== 'sw.js' && file !== '.nojekyll').map(file => './' + file);
   let worker = contents.get('sw.js').toString('utf8');
   if (!worker.includes('__ASTERTRAIL_CACHE_VERSION__') || !worker.includes('__ASTERTRAIL_PRECACHE__')) {
     throw new Error('Service worker template placeholders are missing.');

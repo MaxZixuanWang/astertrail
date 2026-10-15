@@ -87,11 +87,14 @@ function harness(worker, base = 'https://sky.example/') {
 
 test('build uses an explicit publish allowlist and a deterministic content version', () => {
   const input = fixture('allowlist');
+  input.write('.nojekyll', '');
   input.write('secret.env', 'must not publish');
   input.write('.openai/design.txt', 'must not publish');
   input.write('tests/private.js', 'must not publish');
   const first = build(input.source);
   assert.equal(first.files.includes('secret.env'), false);
+  assert.equal(fs.existsSync(path.join(first.destination, '.nojekyll')), true);
+  assert.equal(first.precache.includes('./.nojekyll'), false);
   assert.equal(first.files.some(file => file.startsWith('.openai/') || file.startsWith('tests/')), false);
   assert.equal(build(input.source).version, first.version);
   input.write('app.js', 'window.ready = false;');
