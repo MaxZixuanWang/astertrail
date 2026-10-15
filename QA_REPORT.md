@@ -1,5 +1,7 @@
 # 追星人 · Astertrail 网页版验收
 
+**中文** | [English](QA_REPORT.en.md)
+
 验证日期：2026-10-15。
 
 ## 已验证

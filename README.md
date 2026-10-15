@@ -1,5 +1,7 @@
 # 追星人 · Astertrail 网页版
 
+**中文** | [English](README.en.md)
+
 手机上的星空指南。默认星图，一键进入后置相机实景 AR；无需微信小程序或应用商店。
 
 **在线使用：[追星人 · Astertrail](https://maxzixuanwang.github.io/astertrail/)**
@@ -37,14 +39,16 @@
 
 ## 作者与数据
 
-作者：Max (Zixuan) Wang、Liu Yinan。
+作者：Max (Zixuan) Wang、Yinan Liu。
 
-Max (Zixuan) Wang 是 BDIC 电子信息工程本科生、天文摄影爱好者。共同作者 Liu Yinan 在项目过程中提供了辅助与支持。
+Max (Zixuan) Wang 是 BDIC 电子信息工程本科生、天文摄影爱好者。共同作者 Yinan Liu 在项目过程中提供了辅助与支持。
 
 感谢北京八中王文智老师提出这个项目最初的想法。
 
 [个人主页](https://maxzixuanwang.github.io/) · [反馈邮箱](mailto:maxzixuanwang@gmail.com)
 
-天文资料的具体作者、版本、修改与许可见 [DATA_SOURCES.md](DATA_SOURCES.md) 和 `licenses/`；不要在重新分发时移除这些文件。原小程序源码和 ZIP 仍保留在作者本机，不属于本站发布内容。
+天文资料的具体作者、版本、修改与许可见[数据来源](DATA_SOURCES.md)和[许可说明](licenses/README.md)；不要在重新分发时移除这些文件。原小程序源码和 ZIP 仍保留在作者本机，不属于本站发布内容。
 
 手机真实相机、罗盘精度、权限流程和音效仍需用你的手机确认；自动化测试不能替代真机体验。
+
+[验证记录与边界](QA_REPORT.md)

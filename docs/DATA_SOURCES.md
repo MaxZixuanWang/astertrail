@@ -1,5 +1,7 @@
 # 天文数据来源与复现
 
+**中文** | [English](DATA_SOURCES.en.md)
+
 构建日期：2026-10-15。数据随追星人网页版离线提供，运行时不需要访问星表服务器。
 
 ## 实际覆盖
@@ -63,7 +65,7 @@
 
 ## 复现
 
-需要 Python 3，仅使用标准库。在项目目录执行：
+需要 Python 3，仅使用标准库。在原小程序项目目录执行：
 
 ```text
 python tools/build_catalog.py
@@ -81,6 +83,8 @@ python tools/build_search_labels.py
 `licenses/` 的上游 CC BY-SA 条款与署名要求适用于 `data/catalog.js` 内的派生天文数据及其再分发。HYG/OpenNGC 使用 CC BY-SA 4.0；Stellarium 星文化按其原 CC BY-SA 声明保留。修改或再分发这些数据时应保留来源、说明修改并遵守同方式共享要求。
 
 本说明**不为主程序源码另行指定第三方软件许可**，也没有引入 Stellarium 主程序的 GPL 翻译库。应用代码和数据许可范围分别处理。
+
+各许可文件的双语导览见[许可说明](licenses/README.md)，上游许可原文保持不变。
 
 拼音字音数据及其生成的排序键另保留pypinyin的MIT版权与许可声明；这不会替代天文星表本身的CC BY-SA来源要求。
 

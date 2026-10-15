@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const ROOT_FILES = ['.nojekyll', 'index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'sw.js', 'DATA_SOURCES.md'];
+const ROOT_FILES = ['.nojekyll', 'index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'sw.js', 'DATA_SOURCES.md', 'DATA_SOURCES.en.md'];
 const ROOT_DIRECTORIES = ['styles', 'modules', 'data', 'assets', 'icons', 'licenses'];
 
 function collect(root) {

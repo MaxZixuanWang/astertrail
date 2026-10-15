@@ -12,7 +12,7 @@
   <video id="camera" class="sky-camera" autoplay muted playsinline hidden aria-hidden="true"></video>
   <canvas class="sky-canvas" id="sky" data-label="skyLabel"></canvas>
   <div class="hud">
-    <div class="mast"><div class="brand"><span class="brand-mark">✧</span><span data-text="appName"></span></div><div class="clock"><div id="date"></div><div id="time"></div></div></div>
+    <div class="mast"><div class="brand"><span class="brand-mark" aria-hidden="true"><img src="assets/logo.png" alt=""></span><span data-text="appName"></span></div><div class="clock"><div id="date"></div><div id="time"></div></div></div>
     <div class="mode-switch"><button class="mode-button selected" id="mode-sky" data-text="chart"></button><button class="mode-button" id="mode-ar" data-text="ar"></button></div>
     <div class="search-wrap">
       <div class="searchbar"><span class="search-icon" aria-hidden="true"></span><input class="search-input" id="search" type="search" data-label="searchLabel" autocomplete="off" role="combobox" aria-controls="results" aria-expanded="false"><button class="clear-search" id="clear-search" data-label="searchClose" hidden>×</button></div>
@@ -50,7 +50,7 @@
     <div class="web-status"><span id="offline-status" role="status"></span><button id="update-app" hidden data-text="updateReady"></button><div data-text="version"></div></div>
   </div>
 </dialog>
-<dialog class="preferences-page" id="about-dialog" aria-labelledby="about-page-title"><div class="page-header"><span class="page-title" id="about-page-title" data-text="about"></span><button class="page-close" id="about-close" data-text="done"></button></div><div class="preferences-content"><div class="about-content"><img class="about-portrait" src="assets/author.jpg" alt="Max (Zixuan) Wang"><div class="about-name" id="about-name"></div><div id="about-sections"></div><a class="about-link" href="DATA_SOURCES.md" target="_blank" rel="noopener" data-text="dataSources"></a></div></div></dialog>
+<dialog class="preferences-page" id="about-dialog" aria-labelledby="about-page-title"><div class="page-header"><span class="page-title" id="about-page-title" data-text="about"></span><button class="page-close" id="about-close" data-text="done"></button></div><div class="preferences-content"><div class="about-content"><img class="about-portrait" src="assets/author.jpg" alt="Max (Zixuan) Wang"><div class="about-name" id="about-name"></div><div id="about-sections"></div><a class="about-link" id="data-sources" href="DATA_SOURCES.md" target="_blank" rel="noopener" data-text="dataSources"></a></div></div></dialog>
 <dialog class="sheet" id="location-dialog" aria-labelledby="location-title">
   <form id="location-form">
     <div class="sheet-title" id="location-title" data-text="locationTitle"></div><div class="sheet-copy" data-text="locationCopy"></div>

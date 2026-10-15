@@ -58,6 +58,7 @@
     document.querySelectorAll('[data-text]').forEach(el => { el.textContent = text(el.dataset.text); });
     document.querySelectorAll('[data-label]').forEach(el => { el.setAttribute('aria-label', text(el.dataset.label)); });
     $('search').placeholder = text('searchPlaceholder');
+    $('data-sources').href = language === 'en' ? 'DATA_SOURCES.en.md' : 'DATA_SOURCES.md';
     ['zh', 'en'].forEach(lang => { $('language-' + lang).classList.toggle('selected', lang === language); $('language-' + lang).setAttribute('aria-pressed', String(lang === language)); });
     updateLocationLabel(); if (!$('search-dropdown').hidden) updateSearch(); syncMode(); updateSensorUI(); updateOfflineUI(); lastUI = 0;
   }

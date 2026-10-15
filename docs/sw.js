@@ -1,8 +1,8 @@
 'use strict';
 
 // tools/build.js replaces these values with the exact release contents.
-const RELEASE = '55a3672fe6392c28';
-const PRECACHE_PATHS = ["./DATA_SOURCES.md","./app.js","./assets/author.jpg","./assets/chime.wav","./data/catalog.js","./data/labels.js","./icons/apple-touch-icon.png","./icons/icon-192.png","./icons/icon-512.png","./icons/icon.svg","./index.html","./licenses/CC-BY-SA-4.0.txt","./licenses/DATA-NOTICE.txt","./licenses/OpenNGC-REUSE.txt","./licenses/pypinyin-MIT.txt","./manifest.webmanifest","./modules/astro.js","./modules/browser-media.js","./modules/browser-sensors.js","./modules/controller.js","./modules/i18n.js","./modules/renderer.js","./modules/search.js","./modules/sensors.js","./modules/web-copy.js","./styles/base.css","./styles/browser.css","./styles/sky.css","./styles/tokens.css"];
+const RELEASE = '8a59834d0a39e403';
+const PRECACHE_PATHS = ["./DATA_SOURCES.en.md","./DATA_SOURCES.md","./app.js","./assets/author.jpg","./assets/chime.wav","./assets/logo.png","./data/catalog.js","./data/labels.js","./icons/apple-touch-icon.png","./icons/icon-192.png","./icons/icon-512.png","./icons/icon.svg","./index.html","./licenses/CC-BY-SA-4.0.txt","./licenses/DATA-NOTICE.txt","./licenses/OpenNGC-REUSE.txt","./licenses/README.en.md","./licenses/README.md","./licenses/pypinyin-MIT.txt","./manifest.webmanifest","./modules/astro.js","./modules/browser-media.js","./modules/browser-sensors.js","./modules/controller.js","./modules/i18n.js","./modules/renderer.js","./modules/search.js","./modules/sensors.js","./modules/web-copy.js","./styles/base.css","./styles/browser.css","./styles/sky.css","./styles/tokens.css"];
 const BASE = new URL('./', self.location.href);
 const CACHE_PREFIX = 'astertrail:' + BASE.pathname + ':';
 const CACHE_NAME = CACHE_PREFIX + RELEASE;

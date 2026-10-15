@@ -64,7 +64,7 @@
       {
         language: 'zh-CN', label: '中文',
         bio: '我是 Max（Zixuan）Wang，目前是 BDIC 电子信息工程专业的本科生，也是一名天文摄影爱好者。',
-        story: '追星人源于北京八中王文智老师的一个想法。他曾是我的高中天文课老师，觉得现有工具不够顺手，希望做一个更简单、好用的寻星助手。感谢王老师的启发，让项目有了最初的方向。共同作者 Liu Yinan 在项目过程中提供了辅助与支持，在此一并致谢。',
+        story: '追星人源于北京八中王文智老师的一个想法。他曾是我的高中天文课老师，觉得现有工具不够顺手，希望做一个更简单、好用的寻星助手。感谢王老师的启发，让项目有了最初的方向。共同作者 Yinan Liu 在项目过程中提供了辅助与支持，在此一并致谢。',
         homepageLabel: '个人主页', emailLabel: '联系邮箱', copyHint: '点击复制',
         feedback: '如果遇到 bug，或有任何使用建议，欢迎通过邮箱告诉我。谢谢你帮助追星人变得更好。',
         title: '让每一次抬头，都有发现',
@@ -73,7 +73,7 @@
       {
         language: 'en', label: 'English',
         bio: 'I’m Max (Zixuan) Wang, an undergraduate in Electronic Information Engineering at BDIC and an astrophotography enthusiast.',
-        story: 'Astertrail began with an idea from Wang Wenzhi, my astronomy teacher at Beijing No. 8 High School. He found existing tools awkward to use and wanted a simpler, more intuitive stargazing assistant. My thanks to Mr. Wang for the inspiration that started this project, and to co-author Liu Yinan for her assistance and support throughout.',
+        story: 'Astertrail began with an idea from Wang Wenzhi, my astronomy teacher at Beijing No. 8 High School. He found existing tools awkward to use and wanted a simpler, more intuitive stargazing assistant. My thanks to Mr. Wang for the inspiration that started this project, and to co-author Yinan Liu for her assistance and support throughout.',
         homepageLabel: 'Personal website', emailLabel: 'Contact', copyHint: 'Tap to copy',
         feedback: 'Found a bug or have a suggestion? Please let me know by email. Thank you for helping make Astertrail better.',
         title: 'Look up. Find something new.',

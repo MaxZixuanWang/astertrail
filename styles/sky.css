@@ -16,7 +16,8 @@
 .hud { position: absolute; top: 16px; left: 16px; right: 16px; pointer-events: none; }
 .mast { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 25px; font-weight: 600; letter-spacing: .5px; }
-.brand-mark { color: var(--color-accent); font-size: 28px; font-weight: 400; }
+.brand-mark { position: relative; display: block; flex: 0 0 32px; width: 32px; height: 32px; overflow: hidden; border-radius: 8px; }
+.brand-mark img { position: absolute; width: 64px; height: 64px; max-width: none; left: -14px; top: -16px; }
 .clock { color: var(--color-muted); font-size: 11px; text-align: right; font-family: var(--font-number); line-height: 1.7; }
 .search-wrap { position: relative; pointer-events: auto; }
 .searchbar { display: flex; align-items: center; height: 48px; background: var(--color-glass); color: var(--color-ink); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); padding: 0 4px 0 16px; }
