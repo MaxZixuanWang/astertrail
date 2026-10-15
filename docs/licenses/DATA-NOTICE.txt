@@ -1,0 +1,32 @@
+This notice applies to the astronomical data in data/catalog.js.
+It does not assign a third-party software license to the application's source code.
+
+HYG v4.1: David Nash / Astronomy Nexus. CC BY-SA 4.0.
+https://www.astronexus.com/projects/hyg
+https://github.com/astronexus/HYG-Database/blob/c7f7f883fe678cc7680169a50ccd7dcc49b060ce/hyg/README.md
+
+OpenNGC: Mattia Verga and contributors. CC BY-SA 4.0.
+https://github.com/mattiaverga/OpenNGC
+The original REUSE attribution statement is included in OpenNGC-REUSE.txt.
+The CC BY-SA 4.0 legal text is included in CC-BY-SA-4.0.txt.
+
+Stellarium Sky Cultures: Western and Chinese culture data.
+Original Western statement: "Text and data: CC BY-SA".
+Original Chinese statement: "Text and line: CC BY-SA".
+Those upstream culture statements do not specify a license version.
+Authors: Stellarium's team; Chinese culture contributions include Karrie Berglund
+(Digitalis Education Solutions), Sun Shuwei, and other Stellarium contributors.
+The upstream documentation credits Hong Kong Space Museum star maps and
+Yi Shitong's Chinese and Western Contrast Star Chart and Catalogue 1950.0.
+https://github.com/Stellarium/stellarium-skycultures/tree/014fbb5e59233d133c22f9811af96b67d05a95c9
+
+No constellation artwork, map images, main Stellarium application code, or GPL
+application translation bundles are included in this deliverable.
+
+Changes made for Astertrail (2026-10-15): magnitude filtering; removal of the Sun;
+conversion to decimal-degree coordinates; extraction of Chinese star names;
+polyline segmentation; spherical label positions; manual factual Chinese search
+forms; M102 identification convention; serialization to an offline JavaScript
+data module. Full processing notes and exact source hashes: DATA_SOURCES.md and
+tools/data_sources.json. Retain source credit and applicable share-alike terms
+when redistributing the derived data.

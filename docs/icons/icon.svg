@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="night" cx="35%" cy="30%" r="80%"><stop stop-color="#172a42"/><stop offset="1" stop-color="#08111e"/></radialGradient>
+    <linearGradient id="trail" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#e9c483" stop-opacity=".08"/><stop offset="1" stop-color="#e9c483"/></linearGradient>
+  </defs>
+  <path fill="url(#night)" d="M0 0h512v512H0z"/>
+  <path d="M157 355c67-8 143-76 149-167" fill="none" stroke="url(#trail)" stroke-width="13" stroke-linecap="round"/>
+  <path d="m306 129 15 44 44 15-44 15-15 44-15-44-44-15 44-15z" fill="#edcb90"/>
+  <path d="m186 244 7 20 20 7-20 7-7 20-7-20-20-7 20-7z" fill="#bdcddd"/>
+  <circle cx="244" cy="348" r="5" fill="#7e91a9"/>
+  <circle cx="345" cy="304" r="4" fill="#9cadc2"/>
+</svg>

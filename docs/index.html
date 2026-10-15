@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080f1c"><title>追星人 · Astertrail</title>
+  <link rel="stylesheet" href="styles/base.css"><link rel="stylesheet" href="styles/sky.css"><link rel="stylesheet" href="styles/browser.css">
+  <meta name="description" content="追星人 Astertrail：离线星图、实景 AR 与中英文寻星指南。"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+</head>
+<body>
+<main class="sky-app" id="app">
+  <video id="camera" class="sky-camera" autoplay muted playsinline hidden aria-hidden="true"></video>
+  <canvas class="sky-canvas" id="sky" data-label="skyLabel"></canvas>
+  <div class="hud">
+    <div class="mast"><div class="brand"><span class="brand-mark">✧</span><span data-text="appName"></span></div><div class="clock"><div id="date"></div><div id="time"></div></div></div>
+    <div class="mode-switch"><button class="mode-button selected" id="mode-sky" data-text="chart"></button><button class="mode-button" id="mode-ar" data-text="ar"></button></div>
+    <div class="search-wrap">
+      <div class="searchbar"><span class="search-icon" aria-hidden="true"></span><input class="search-input" id="search" type="search" data-label="searchLabel" autocomplete="off" role="combobox" aria-controls="results" aria-expanded="false"><button class="clear-search" id="clear-search" data-label="searchClose" hidden>×</button></div>
+      <div class="search-dropdown" id="search-dropdown" hidden><div class="search-summary"><span id="search-summary"></span><span id="search-count"></span></div><div class="results" id="results" role="listbox" data-label="searchLabel"></div></div>
+    </div>
+    <div class="observer"><span class="view-heading" id="heading"></span><span id="sensor-hint" class="sensor-hint" role="status" hidden></span></div>
+  </div>
+  <div class="side-tools"><button class="side-button" id="settings" data-label="settings"><span class="side-icon settings-icon" aria-hidden="true"><span class="slider-line"></span><span class="slider-line"></span><span class="slider-line"></span></span><span class="side-label" data-text="settings"></span></button><button class="side-button" id="about" data-label="about"><span class="side-icon info-icon" aria-hidden="true">i</span><span class="side-label" data-text="about"></span></button></div>
+  <div class="floating-tools"><button class="tool" id="zoom-in" data-label="zoomIn">＋</button><button class="tool" id="zoom-out" data-label="zoomOut">−</button></div>
+  <div class="celebration" id="celebration" role="status" hidden><div class="celebration-title" data-text="found"></div><div class="celebration-sub" id="celebration-sub"></div></div>
+  <div class="bottom">
+    <div class="target-panel" id="target-panel" hidden><div class="target-top"><div><div class="target-name" id="target-name"></div><div class="target-caption" id="target-caption"></div></div><div class="angle" id="angle"></div></div><div class="direction-prompt" id="direction-prompt"></div><div class="target-status"><span id="target-status"></span><button class="target-dismiss" id="dismiss-target" data-text="cancel"></button></div></div>
+    <div class="welcome" id="welcome"><div class="welcome-title" data-text="welcome"></div><div class="welcome-sub" data-text="welcomeSub"></div></div>
+    <div class="actions"><button class="follow" id="follow" data-text="startAR"></button></div><div class="help-line" id="mode-hint" data-text="previewHint"></div>
+  </div>
+</main>
+<dialog class="preferences-page" id="settings-dialog" aria-labelledby="settings-title">
+  <div class="page-header"><span class="page-title" id="settings-title" data-text="settings"></span><button class="page-close" id="settings-close" data-text="done"></button></div>
+  <div class="preferences-content">
+    <section class="settings-section"><div class="settings-label" data-text="view"></div><div class="settings-group">
+      <div class="settings-row"><div class="setting-text"><div class="setting-title" data-text="tracking"></div><div class="setting-note" data-text="trackingNote"></div><div id="tracking-state" class="setting-note" role="status"></div></div><button class="setting-toggle" aria-describedby="tracking-state" id="tracking" data-label="tracking" role="switch" aria-checked="false"><span class="toggle-thumb"></span></button></div>
+      <div class="settings-row"><div class="setting-text"><div class="setting-title" data-text="lines"></div><div class="setting-note" data-text="linesNote"></div></div><button class="setting-toggle is-on" id="lines" data-label="lines" role="switch" aria-checked="true"><span class="toggle-thumb"></span></button></div>
+      <div class="settings-row"><div class="setting-text"><div class="setting-title" data-text="sound"></div><div class="setting-note" data-text="soundNote"></div></div><button class="setting-toggle is-on" id="sound" data-label="sound" role="switch" aria-checked="true"><span class="toggle-thumb"></span></button></div>
+    </div></section>
+    <section class="settings-section" id="calibration-section"><div class="settings-label" data-text="directionSetup"></div><div class="settings-group">
+      <div class="calibration-copy" data-text="northNote"></div><button class="settings-row row-action" id="calibrate-north" data-text="northLabel"></button>
+      <div class="calibration-copy" data-text="targetCalibrateNote"></div><button class="settings-row row-action" id="calibrate-target" data-text="targetCalibrate"></button>
+    </div></section>
+    <section class="settings-section"><div class="settings-label" data-text="general"></div><div class="settings-group">
+      <button class="settings-row row-action" id="location"><span class="setting-text"><span class="setting-title" data-text="location"></span><span class="setting-note" id="location-label"></span></span><span class="chevron" aria-hidden="true">›</span></button>
+      <div class="settings-row language-row"><div class="setting-title" data-text="language"></div><div class="language-options"><button class="language-option" id="language-zh" aria-pressed="true" lang="zh-CN">简体中文</button><button class="language-option" id="language-en" aria-pressed="false" lang="en">English</button></div></div>
+      <button class="settings-row row-action" id="install"><span class="setting-text"><span class="setting-title" data-text="install"></span><span class="setting-note" data-text="installNote"></span></span><span class="chevron" aria-hidden="true">›</span></button>
+      <button class="settings-row row-action" id="help"><span class="setting-text"><span class="setting-title" data-text="help"></span><span class="setting-note" data-text="helpNote"></span></span><span class="chevron" aria-hidden="true">›</span></button>
+    </div></section>
+    <div class="web-status"><span id="offline-status" role="status"></span><button id="update-app" hidden data-text="updateReady"></button><div data-text="version"></div></div>
+  </div>
+</dialog>
+<dialog class="preferences-page" id="about-dialog" aria-labelledby="about-page-title"><div class="page-header"><span class="page-title" id="about-page-title" data-text="about"></span><button class="page-close" id="about-close" data-text="done"></button></div><div class="preferences-content"><div class="about-content"><img class="about-portrait" src="assets/author.jpg" alt="Max (Zixuan) Wang"><div class="about-name" id="about-name"></div><div id="about-sections"></div><a class="about-link" href="DATA_SOURCES.md" target="_blank" rel="noopener" data-text="dataSources"></a></div></div></dialog>
+<dialog class="sheet" id="location-dialog" aria-labelledby="location-title">
+  <form id="location-form">
+    <div class="sheet-title" id="location-title" data-text="locationTitle"></div><div class="sheet-copy" data-text="locationCopy"></div>
+    <button class="follow" id="locate" type="button" data-text="locate"></button>
+    <label class="field-label" for="latitude" data-text="latitude"></label><input class="field-input" id="latitude" type="number" step="any" min="-90" max="90" required value="39.9042">
+    <label class="field-label" for="longitude" data-text="longitude"></label><input class="field-input" id="longitude" type="number" step="any" min="-180" max="180" required value="116.4074">
+    <div class="field-error" id="location-error" role="alert"></div><button class="follow" type="submit" data-text="saveLocation"></button><button class="link-button" id="location-close" type="button" data-text="locationClose"></button>
+  </form>
+</dialog>
+<dialog class="sheet" id="help-dialog" aria-labelledby="help-title"><div class="sheet-title" id="help-title" data-text="helpTitle"></div><p class="sheet-copy" data-text="help1"></p><p class="sheet-copy" data-text="help2"></p><p class="sheet-copy" data-text="webHelp3"></p><p class="sheet-copy" data-text="help5"></p><p class="sheet-copy" data-text="previewHelp"></p><p class="sheet-copy" data-text="previewCamera"></p><button class="follow" id="help-close" data-text="helpClose"></button></dialog>
+<dialog class="sheet" id="install-dialog" aria-labelledby="install-title"><div class="sheet-title" id="install-title" data-text="installTitle"></div><p class="sheet-copy" data-text="installIOS"></p><p class="sheet-copy" data-text="installAndroid"></p><p class="sheet-copy" data-text="installOffline"></p><button class="follow" id="install-now" hidden data-text="installNow"></button><button class="link-button" id="install-close" data-text="done"></button></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="data/catalog.js"></script><script src="data/labels.js"></script><script src="modules/i18n.js"></script><script src="modules/astro.js"></script><script src="modules/search.js"></script><script src="modules/controller.js"></script><script src="modules/renderer.js"></script><script src="modules/web-copy.js"></script><script src="modules/browser-media.js"></script><script src="modules/browser-sensors.js"></script><script src="app.js"></script>
+</body>
+</html>

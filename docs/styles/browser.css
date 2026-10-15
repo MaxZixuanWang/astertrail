@@ -1,0 +1,50 @@
+@import url('tokens.css');
+html, body { margin: 0; width: 100%; height: 100%; overflow-x: clip; }
+* { box-sizing: border-box; }
+[hidden], dialog:not([open]) { display: none !important; }
+button, input { font-family: var(--font-body); }
+button { cursor: pointer; }
+.sky-canvas { cursor: grab; }
+.sky-canvas:active { cursor: grabbing; }
+.results { overscroll-behavior: contain; overflow-anchor: none; }
+.result:focus-visible, .result.selected { background: var(--color-raised); color: var(--color-ink); outline-offset: -3px; }
+.search-input::-webkit-search-cancel-button { display: none; }
+.search-input::-webkit-search-decoration { display: none; }
+dialog.sheet { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: min(86dvh, 680px); width: calc(100% - 40px); }
+dialog.preferences-page { padding: 0; border: 0; margin: 0 auto; inset: 0; width: 100%; height: 100%; max-height: 100%; transform: none; }
+dialog::backdrop { background: var(--color-scrim); }
+.sheet-copy { margin-top: 0; }
+.setting-text > .setting-title, .setting-text > .setting-note { display: block; }
+.toast { position: fixed; }
+@media (hover: hover) { button:hover { filter: brightness(1.12); } }
+
+html { color-scheme: dark; background: var(--color-paper); overscroll-behavior: none; }
+body { height: 100dvh; overflow: hidden; }
+.hud { top: calc(16px + env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); }
+.sky-app { height: 100dvh; }
+.sky-camera { pointer-events: none; }
+.ar-mode .sky-canvas { cursor: default; }
+.ar-mode .hud { text-shadow: 0 1px 4px var(--color-paper); }
+.observer { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.sensor-hint { max-width: 300px; color: var(--color-accent); background: var(--color-glass); border-radius: 12px; padding: 7px 10px; line-height: 1.5; font-size: 11px; text-align: right; }
+dialog.preferences-page { height: 100dvh; padding-top: env(safe-area-inset-top); }
+dialog.sheet { overflow-y: auto; overscroll-behavior: contain; }
+.search-input, .field-input { font-size: 16px; }
+.calibration-copy { color: var(--color-muted); font-size: 12px; line-height: 1.7; padding: 14px 16px 0; }
+#calibration-section .row-action { justify-content: flex-start; color: var(--color-accent); white-space: normal; text-align: left; min-height: 64px; }
+.web-status { padding: 8px 28px 28px; color: var(--color-muted); font-size: 11px; line-height: 2; }
+.web-status > * { display: block; }
+#update-app { background: transparent; color: var(--color-accent); margin: 8px 0; white-space: normal; text-align: left; }
+#install-now { margin-bottom: 14px; }
+@media (max-height: 540px) and (orientation: landscape) {
+  .hud { right: auto; width: 320px; top: max(10px, env(safe-area-inset-top)); }
+  .mast { margin-bottom: 8px; }.brand { font-size: 24px; }.clock { display: none; }
+  .mode-switch { margin-bottom: 8px; }.searchbar { min-height: 44px; }
+  .bottom { left: auto; right: max(16px, env(safe-area-inset-right)); width: min(40%, 340px); bottom: max(12px, env(safe-area-inset-bottom)); }
+  .side-tools { top: auto; bottom: max(16px, env(safe-area-inset-bottom)); flex-direction: row; }
+  .floating-tools { top: 20px; right: max(16px, env(safe-area-inset-right)); flex-direction: row; }
+  .welcome-title { font-size: 16px; }.welcome-sub, .help-line { font-size: 10px; }
+  .search-dropdown { max-height: 45dvh; overflow: hidden; }.results { max-height: 34dvh; }
+  .sensor-hint { max-width: 310px; }
+}
+@media (prefers-reduced-motion: reduce) { .shaking { animation: none !important; } }
