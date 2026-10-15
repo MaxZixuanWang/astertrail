@@ -25,6 +25,7 @@ function element(id = '') {
   const classes = new Set();
   return Object.assign(eventTarget(), {
     id, hidden: true, disabled: false, open: false, value: '', style: { transform: '' }, dataset: {}, children: [],
+    videoWidth: id === 'camera' ? 1280 : 0, videoHeight: id === 'camera' ? 720 : 0,
     classList: {
       add(value) { classes.add(value); }, remove(value) { classes.delete(value); },
       toggle(value, enabled) { if (enabled) classes.add(value); else classes.delete(value); },
@@ -132,7 +133,7 @@ test('zoomed chart enters AR with matching video magnification and restores char
   assert.equal(h.app.model.ar, true);
   assert.equal(h.app.model.arReady, true);
   assert.equal(h.app.model.fov, 42);
-  const scale = Number(/^scale\(([^)]+)\)$/.exec(h.get('camera').style.transform)[1]);
+  const scale = parseFloat(h.get('camera').style.height) / h.app.model.height;
   const radians = Math.PI / 180;
   const projectedOffset = fov => h.app.model.height / (2 * Math.tan(fov * radians / 2)) * Math.tan(10 * radians);
   assert.ok(Math.abs(projectedOffset(70) * scale - projectedOffset(42)) < 0.01,
@@ -151,15 +152,68 @@ test('zoomed chart enters AR with matching video magnification and restores char
 
 test('AR clamps a wide chart to the unzoomed camera and restores the wider chart on exit', async () => {
   const h = harness();
+  h.get('zoom').value = '0.5'; h.get('zoom').dispatch('input');
+  const chartFov = h.app.model.fov;
+  const starting = h.app.startAR();
+  assert.equal(h.get('camera').hidden, false, 'video is laid out before playback, under the opaque chart');
+  h.cameraRequests[0].resolve(true);
+  await starting;
+  assert.equal(h.app.model.fov, 70);
+  assert.equal(h.get('zoom').value, '1');
+  assert.equal(h.get('zoom-value').textContent, '1.0×');
+  assert.match(h.get('toast').textContent, /1×/);
+  assertCameraCoversViewport(h);
+  h.get('zoom').value = '0.5'; h.get('zoom').dispatch('input');
+  assert.equal(h.app.model.fov, 70, 'AR never shrinks the video below its native view');
+  assertCameraCoversViewport(h);
+  h.app.exitAR();
+  assert.equal(h.app.model.fov, chartFov);
+  assert.equal(h.get('zoom-value').textContent, '0.5×');
+  assert.equal(h.get('camera').style.transform, '');
+  assert.equal(h.get('camera').style.width, '');
+});
+
+function assertCameraCoversViewport(h) {
+  const video = h.get('camera'), w = h.app.model.width, height = h.app.model.height;
+  const width = parseFloat(video.style.width), vh = parseFloat(video.style.height);
+  const left = parseFloat(video.style.left), top = parseFloat(video.style.top);
+  assert.ok(width >= w - 1e-8 && vh >= height - 1e-8, 'camera fills the entire star-chart viewport');
+  assert.ok(Math.abs(left + width / 2 - w / 2) < 1e-8);
+  assert.ok(Math.abs(top + vh / 2 - height / 2) < 1e-8);
+  assert.ok(Math.abs(width / vh - video.videoWidth / video.videoHeight) < 1e-8, 'video aspect ratio is preserved');
+  assert.equal(video.style.transform, '', 'native video is sized without a CSS scale transform');
+}
+
+test('late camera dimensions and portrait stream changes still fill the AR viewport', async () => {
+  const h = harness(), video = h.get('camera');
+  video.videoWidth = video.videoHeight = 0;
   h.app.model.fov = 110;
   const starting = h.app.startAR();
   h.cameraRequests[0].resolve(true);
   await starting;
-  assert.equal(h.app.model.fov, 70);
-  assert.equal(h.get('camera').style.transform, 'scale(1)');
-  h.app.exitAR();
-  assert.equal(h.app.model.fov, 110);
-  assert.equal(h.get('camera').style.transform, '');
+  assert.equal(video.style.width, '');
+  video.videoWidth = 720; video.videoHeight = 1280;
+  video.dispatch('loadedmetadata');
+  assertCameraCoversViewport(h);
+  video.videoWidth = 1280; video.videoHeight = 720;
+  video.dispatch('resize');
+  assertCameraCoversViewport(h);
+});
+
+test('AR stays centered and fills the screen after rotation and browser viewport resizing', async () => {
+  const h = harness();
+  const starting = h.app.startAR();
+  h.cameraRequests[0].resolve(true);
+  await starting;
+  h.get('zoom').value = '2'; h.get('zoom').dispatch('input');
+  h.get('sky').getBoundingClientRect = () => ({ width: 812, height: 375 });
+  h.app.resize();
+  assertCameraCoversViewport(h);
+  assert.ok(Math.abs(parseFloat(h.get('camera').style.width) - 812 * 2) < 1e-8);
+  h.get('sky').getBoundingClientRect = () => ({ width: 375, height: 620 });
+  h.app.resize();
+  assertCameraCoversViewport(h);
+  assert.ok(Math.abs(parseFloat(h.get('camera').style.height) - 620 * 2) < 1e-8);
 });
 
 test('the zoom slider changes chart scale and AR camera scale together without overwriting chart zoom', async () => {
@@ -178,7 +232,7 @@ test('the zoom slider changes chart scale and AR camera scale together without o
   await starting;
   setZoom(3);
   assert.ok(Math.abs(h.app.model.fov - fovAtScale(3)) < 1e-8);
-  const scale = Number(/^scale\(([^)]+)\)$/.exec(h.get('camera').style.transform)[1]);
+  const scale = parseFloat(h.get('camera').style.height) / h.app.model.height;
   assert.ok(Math.abs(scale - 3) < 1e-8);
   assert.equal(h.get('zoom-value').textContent, '3.0×');
   h.app.exitAR();
