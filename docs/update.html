@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080f1c">
+  <title>更新追星人 · Update Astertrail</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 28px; background: #080f1c; color: #edf1f7; font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(100%, 420px); }
+    .mark { color: #e6bf7a; font-size: 40px; line-height: 1; }
+    h1 { margin: 24px 0 2px; font-size: 30px; letter-spacing: -.04em; }
+    .subtitle { margin: 0 0 28px; color: #e6bf7a; font-size: 17px; }
+    p { color: #a9b7c9; }
+    .english { font-size: 14px; }
+    button { width: 100%; margin: 20px 0 8px; padding: 16px 18px; border: 0; border-radius: 16px; background: #e6bf7a; color: #131a25; font: 600 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: wait; }
+    button:focus-visible, a:focus-visible { outline: 2px solid #edf1f7; outline-offset: 5px; }
+    #status { min-height: 3.3em; white-space: pre-line; font-size: 14px; }
+    a { color: #a9b7c9; text-underline-offset: 4px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">✦</div>
+    <h1>更新追星人</h1>
+    <p class="subtitle" lang="en">Update Astertrail</p>
+    <p>获取最新版本后，自动返回星图。你的语言和观测位置设置会保留。请先结束其他页面中的 AR。</p>
+    <p class="english" lang="en">Get the latest version and return to the sky map. Your language and observing location are kept. Please leave AR in any other open tabs first.</p>
+    <button id="update" type="button">更新并打开 · Update &amp; open</button>
+    <p id="status" role="status" aria-live="polite">需要联网，通常只需几秒。
+An internet connection is required.</p>
+    <a href="./">返回星图 · Back to the sky map</a>
+  </main>
+  <script>
+    'use strict';
+    const button = document.getElementById('update');
+    const status = document.getElementById('status');
+    button.onclick = async () => {
+      if (button.disabled) return;
+      button.disabled = true;
+      status.textContent = '正在检查并下载更新…\nChecking and downloading the update…';
+      let cancelled = false, timer;
+      const cleanups = [];
+      const timeoutMessage = '更新超时，请确认网络后重试。\nThe update timed out. Check your connection and try again.';
+      const check = () => { if (cancelled) throw new Error(timeoutMessage); };
+      function waitFor(worker, states) {
+        return new Promise((resolve, reject) => {
+          const changed = () => {
+            if (states.includes(worker.state)) resolve();
+            else if (worker.state === 'redundant') reject(new Error('更新未能完成，请重试。\nThe update could not finish. Please try again.'));
+          };
+          worker.addEventListener('statechange', changed);
+          cleanups.push(() => worker.removeEventListener('statechange', changed));
+          changed();
+        });
+      }
+      async function update() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext) {
+          throw new Error('请用 Safari 或 Chrome 打开此 HTTPS 页面后重试。\nOpen this HTTPS page in Safari or Chrome and try again.');
+        }
+        const base = new URL('./', location.href);
+        let registration = await navigator.serviceWorker.getRegistration(base.href);
+        check();
+        if (registration && registration.scope !== base.href) {
+          throw new Error('当前页面的更新范围不匹配，请从追星人网站重新打开。\nThe update scope does not match. Reopen this page from Astertrail.');
+        }
+        if (registration) await registration.update();
+        else registration = await navigator.serviceWorker.register(new URL('sw.js', base).href, { scope: base.href, updateViaCache: 'none' });
+        check();
+        let worker = registration.installing || registration.waiting;
+        if (!worker) return;
+        await waitFor(worker, ['installed', 'activating', 'activated']);
+        check();
+        worker = registration.waiting || worker;
+        const activation = waitFor(worker, ['activated']);
+        if (worker.state === 'installed') worker.postMessage({ type: 'SKIP_WAITING' });
+        await activation;
+        check();
+      }
+      try {
+        await Promise.race([update(), new Promise((resolve, reject) => {
+          timer = setTimeout(() => { cancelled = true; reject(new Error(timeoutMessage)); }, 30000);
+        })]);
+        status.textContent = '已就绪，正在打开最新版。\nReady. Opening the latest version.';
+        location.replace(new URL('./', location.href).href);
+      } catch (error) {
+        status.textContent = error.message.includes('\n') ? error.message : '暂时无法更新，请确认网络后重试。\nCould not update. Check your connection and try again.';
+      } finally {
+        cancelled = true;
+        clearTimeout(timer);
+        cleanups.forEach(cleanup => cleanup());
+        button.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

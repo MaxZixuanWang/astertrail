@@ -62,13 +62,21 @@
       this.stars.forEach(s => { if (s.hip) this.hip.set(s.hip, s); });
       (this.catalog.lineStars || []).map(position).forEach(s => this.hip.set(s.hip, s));
     }
-    draw(model, date, now) {
+    draw(model, date, now, video) {
       this.updatePositions(model, date);
       const ctx = this.ctx, w = model.width, h = model.height;
       const basis = Astro.cameraBasis(model.camera);
       const project = vector => Astro.project(vector, basis, w, h, model.fov);
       if (model.ar) {
-        ctx.clearRect(0, 0, w, h);
+        // Composite camera and stars together; native video-layer sizing must
+        // not determine the visible camera area on mobile browsers.
+        ctx.fillStyle = palette.sky; ctx.fillRect(0, 0, w, h);
+        if (video && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+          const zoom = Math.max(1, Math.tan(35 * Math.PI / 180) / Math.tan(model.fov * Math.PI / 360));
+          const scale = Math.max(w / video.videoWidth, h / video.videoHeight) * zoom;
+          const sw = w / scale, sh = h / scale;
+          ctx.drawImage(video, (video.videoWidth - sw) / 2, (video.videoHeight - sh) / 2, sw, sh, 0, 0, w, h);
+        }
         ctx.fillStyle = palette.arShade; ctx.fillRect(0, 0, w, h);
       } else {
         const gradient = ctx.createLinearGradient(0, 0, 0, h);

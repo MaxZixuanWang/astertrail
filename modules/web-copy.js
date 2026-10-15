@@ -23,7 +23,7 @@
       offlineActive: '当前离线 · 星图可用', updateReady: '发现新版本，点此更新', updateBusy: '请先返回星图再更新',
       webHelp3: '箭头由红变绿表示目标进入视场。中心 1° 内保持片刻，屏幕会闪动并播放音效。支持的 Android 设备还会震动；iPhone 保留画面和声音提示。',
       help5: '方向偏了？远离磁性手机壳和金属物，轻轻画“8”字后重新开启随动，或在设置中用已知天体校准。',
-      dataSources: '星表来源与许可证', audioError: '请检查静音和音量；点击任意按钮后再试。', version: '网页版 · Astertrail 1.0'
+      dataSources: '星表来源与许可证', audioError: '请检查静音和音量；点击任意按钮后再试。', checkUpdate: '检查并更新版本', version: '网页版 · Astertrail 1.0.3'
     },
     en: {
       zoomLabel: 'Zoom: slide up to magnify, down to widen',
@@ -47,7 +47,7 @@
       offlineActive: 'Offline · Sky map available', updateReady: 'New version available — update', updateBusy: 'Return to the sky map before updating.',
       webHelp3: 'The arrow turns green when the target enters your view. Stay within 1° of the center for a moment for a screen effect and chime. Supported Android devices also vibrate; iPhone uses visual and audio cues.',
       help5: 'Direction feels off? Move away from magnetic cases and metal, gently move the phone in a figure eight, then restart tracking, or calibrate with a known object in Settings.',
-      dataSources: 'Catalog sources & licenses', audioError: 'Check silent mode and volume. Tap a button and try again.', version: 'Web edition · Astertrail 1.0'
+      dataSources: 'Catalog sources & licenses', audioError: 'Check silent mode and volume. Tap a button and try again.', checkUpdate: 'Check for updates', version: 'Web edition · Astertrail 1.0.3'
     }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

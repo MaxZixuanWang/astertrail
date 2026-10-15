@@ -20,7 +20,7 @@ function fixture(name) {
     fs.writeFileSync(path.join(source, file), value);
   }
   write('index.html', '<!doctype html><link rel="manifest" href="./manifest.webmanifest"><script src="./app.js"></script>');
-  write('app.js', 'window.ready = true;');
+  write('app.js', 'window.ready = true; window.build = "__ASTERTRAIL_BUILD__";');
   write('styles/app.css', 'body { background: #08111e; }');
   write('modules/astro.js', 'window.astro = {};');
   write('data/catalog.js', 'window.catalog = [];');
@@ -28,7 +28,7 @@ function fixture(name) {
   write('assets/author.jpg', 'test portrait');
   write('DATA_SOURCES.md', '# Public data attribution');
   write('licenses/DATA-NOTICE.txt', 'Public data license');
-  for (const file of ['manifest.webmanifest', 'sw.js', 'icons/icon-192.png', 'icons/icon-512.png']) {
+  for (const file of ['manifest.webmanifest', 'sw.js', 'update.html', 'icons/icon-192.png', 'icons/icon-512.png']) {
     write(file, fs.readFileSync(path.join(PROJECT, file)));
   }
   return { source, write };
@@ -95,6 +95,10 @@ test('build uses an explicit publish allowlist and a deterministic content versi
   assert.equal(first.files.includes('secret.env'), false);
   assert.equal(fs.existsSync(path.join(first.destination, '.nojekyll')), true);
   assert.equal(first.precache.includes('./.nojekyll'), false);
+  assert.ok(first.files.includes('update.html'));
+  assert.equal(first.precache.includes('./update.html'), false);
+  assert.match(fs.readFileSync(path.join(first.destination, 'app.js'), 'utf8'), new RegExp(first.version.slice(0, 8)));
+  assert.doesNotMatch(fs.readFileSync(path.join(first.destination, 'app.js'), 'utf8'), /__ASTERTRAIL_BUILD__/);
   assert.equal(first.files.some(file => file.startsWith('.openai/') || file.startsWith('tests/')), false);
   assert.equal(build(input.source).version, first.version);
   input.write('app.js', 'window.ready = false;');
@@ -158,6 +162,8 @@ test('the worker never intercepts remote, unrelated, login or write requests', a
     { method: 'GET', mode: 'navigate', url: 'https://other.example/' },
     { method: 'GET', mode: 'navigate', url: 'https://sky.example/account/login' },
     { method: 'GET', mode: 'navigate', url: 'https://sky.example/astertrail/login' },
+    { method: 'GET', mode: 'navigate', url: 'https://sky.example/astertrail/update.html' },
+    { method: 'GET', mode: 'navigate', url: 'https://sky.example/astertrail/update.html?retry=1' },
     { method: 'GET', mode: 'cors', url: 'https://sky.example/astertrail/api/private' },
     { method: 'POST', mode: 'cors', url: 'https://sky.example/astertrail/app.js' }
   ]) assert.equal(await runtime.dispatch('fetch', { request }), undefined);
@@ -180,6 +186,121 @@ test('updates require the explicit message and clean only their own deployment c
   assert.equal(runtime.cacheData.has('astertrail:/astertrail/:old'), false);
   assert.equal(runtime.cacheData.has('astertrail:/:different-site'), true);
   assert.equal(runtime.cacheData.has('another-app'), true);
+});
+
+function recoveryWorker(state) {
+  const listeners = new Set();
+  return {
+    state, messages: [],
+    addEventListener(type, callback) { if (type === 'statechange') listeners.add(callback); },
+    removeEventListener(type, callback) { if (type === 'statechange') listeners.delete(callback); },
+    change(state) { this.state = state; [...listeners].forEach(callback => callback()); },
+    postMessage(message) { this.messages.push(message); },
+    get listenerCount() { return listeners.size; }
+  };
+}
+
+function recoveryPage(registration) {
+  const button = { disabled: false }, status = {}, timers = new Map(), navigations = [], registered = [];
+  const script = fs.readFileSync(path.join(PROJECT, 'update.html'), 'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+  const serviceWorker = {
+    async getRegistration(scope) { assert.equal(scope, 'https://sky.example/astertrail/'); return registration; },
+    async register(url, options) { registered.push({ url, options }); return { scope: options.scope }; }
+  };
+  vm.runInNewContext(script, {
+    document: { getElementById(id) { return id === 'update' ? button : status; } },
+    navigator: { serviceWorker }, window: { isSecureContext: true }, URL,
+    location: { href: 'https://sky.example/astertrail/update.html', replace(url) { navigations.push(url); } },
+    setTimeout(callback) { timers.set(1, callback); return 1; }, clearTimeout(id) { timers.delete(id); }
+  });
+  return { button, status, timers, navigations, registered };
+}
+
+async function flushRecovery() { for (let i = 0; i < 8; i++) await Promise.resolve(); }
+
+test('online recovery waits for activation before opening the app and only starts on a click', async () => {
+  const worker = recoveryWorker('installed');
+  let updates = 0;
+  const page = recoveryPage({ scope: 'https://sky.example/astertrail/', waiting: worker, async update() { updates++; } });
+  assert.equal(updates, 0);
+  const pending = page.button.onclick();
+  await flushRecovery();
+  assert.equal(updates, 1);
+  assert.equal(worker.messages[0].type, 'SKIP_WAITING');
+  assert.deepEqual(page.navigations, []);
+  assert.equal(page.button.disabled, true);
+  worker.change('activating');
+  await flushRecovery();
+  assert.deepEqual(page.navigations, []);
+  worker.change('activated');
+  await pending;
+  assert.deepEqual(page.navigations, ['https://sky.example/astertrail/']);
+  assert.equal(page.button.disabled, false);
+  assert.equal(page.timers.size, 0);
+  assert.equal(worker.listenerCount, 0);
+});
+
+test('online recovery observes an already installing worker without relying on updatefound', async () => {
+  const worker = recoveryWorker('installing');
+  const older = recoveryWorker('installed');
+  const registration = { scope: 'https://sky.example/astertrail/', installing: worker, waiting: older, async update() {} };
+  const page = recoveryPage(registration);
+  const pending = page.button.onclick();
+  await flushRecovery();
+  assert.equal(worker.messages.length, 0);
+  assert.equal(older.messages.length, 0, 'an older waiting release must not replace the newer installing release');
+  registration.waiting = worker;
+  worker.change('installed');
+  await flushRecovery();
+  assert.equal(worker.messages[0].type, 'SKIP_WAITING');
+  worker.change('activated');
+  await pending;
+  assert.equal(page.navigations.length, 1);
+});
+
+test('online recovery opens the current version when no update is needed and initializes only its own scope', async () => {
+  const current = recoveryPage({ scope: 'https://sky.example/astertrail/', async update() {} });
+  await current.button.onclick();
+  assert.equal(current.navigations.length, 1);
+  const first = recoveryPage(undefined);
+  await first.button.onclick();
+  assert.equal(first.registered[0].url, 'https://sky.example/astertrail/sw.js');
+  assert.equal(first.registered[0].options.scope, 'https://sky.example/astertrail/');
+  assert.equal(first.registered[0].options.updateViaCache, 'none');
+  assert.equal(first.navigations.length, 1);
+  let unrelatedUpdates = 0;
+  const other = recoveryPage({ scope: 'https://sky.example/', async update() { unrelatedUpdates++; } });
+  await other.button.onclick();
+  assert.equal(unrelatedUpdates, 0);
+  assert.equal(other.registered.length, 0);
+  assert.equal(other.navigations.length, 0);
+  assert.match(other.status.textContent, /scope does not match/);
+});
+
+test('online recovery supports retry after failure and does not navigate after a timed-out update finishes', async () => {
+  let fail = true;
+  const page = recoveryPage({ scope: 'https://sky.example/astertrail/', async update() { if (fail) throw new Error('network'); } });
+  await page.button.onclick();
+  assert.equal(page.button.disabled, false);
+  assert.equal(page.navigations.length, 0);
+  assert.match(page.status.textContent, /try again/);
+  fail = false;
+  await page.button.onclick();
+  assert.equal(page.navigations.length, 1);
+
+  let finish;
+  const worker = recoveryWorker('installed');
+  const slow = recoveryPage({ scope: 'https://sky.example/astertrail/', waiting: worker, update() { return new Promise(resolve => { finish = resolve; }); } });
+  const pending = slow.button.onclick();
+  await flushRecovery();
+  slow.timers.get(1)();
+  await pending;
+  assert.equal(slow.button.disabled, false);
+  assert.match(slow.status.textContent, /timed out/);
+  finish();
+  await flushRecovery();
+  assert.equal(worker.messages.length, 0);
+  assert.equal(slow.navigations.length, 0);
 });
 
 test('preview server serves root and subfolder builds with correct MIME and no workspace exposure', async () => {

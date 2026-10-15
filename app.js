@@ -5,6 +5,8 @@
   const canvas = $('sky'), ctx = canvas.getContext('2d');
   const renderer = new SkyRenderer(ctx, SkyCatalog);
   const sound = BrowserMedia.createSound('assets/chime.wav');
+  const buildVersion = '__ASTERTRAIL_BUILD__';
+  $('build-version').textContent = ' · ' + (buildVersion.startsWith('__') ? 'dev' : buildVersion);
   const pad = n => String(n).padStart(2, '0');
   const storage = {
     get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; } },
@@ -121,29 +123,12 @@
   $('dismiss-target').onclick = () => { model.select(null); $('celebration').hidden = true; lastUI = 0; };
   // Match the camera crop to the perspective projection, not to the FOV ratio.
   const zoomForFov = fov => Math.tan(35 * Math.PI / 180) / Math.tan(fov * Math.PI / 360);
-  function fitCamera() {
-    const video = $('camera');
-    if (!(model.ar || arStarting) || !video.videoWidth || !video.videoHeight) {
-      video.style.width = video.style.height = video.style.left = video.style.top = '';
-      return;
-    }
-    // Explicit cover dimensions avoid relying on the native video layer to
-    // apply object-fit and a scale transform together at AR startup.
-    const zoom = Math.max(1, zoomForFov(model.fov));
-    const scale = Math.max(model.width / video.videoWidth, model.height / video.videoHeight) * zoom;
-    const width = video.videoWidth * scale, height = video.videoHeight * scale;
-    video.style.width = width + 'px'; video.style.height = height + 'px';
-    video.style.left = (model.width - width) / 2 + 'px'; video.style.top = (model.height - height) / 2 + 'px';
-  }
-  $('camera').addEventListener('loadedmetadata', fitCamera);
-  $('camera').addEventListener('resize', fitCamera);
   function syncZoom() {
     const magnification = zoomForFov(model.fov), label = magnification.toFixed(1) + '×';
     $('zoom').min = String(zoomForFov(model.ar ? 70 : 110));
     $('zoom').max = String(zoomForFov(25)); $('zoom').value = String(magnification);
     $('zoom').disabled = arStarting; $('zoom').setAttribute('aria-valuetext', label);
     $('zoom-value').textContent = label;
-    fitCamera();
     lastUI = 0;
   }
   function zoomBy(factor) {
@@ -215,13 +200,13 @@
     if (navigator.vibrate) navigator.vibrate([60, 50, 100]);
     clearTimeout(celebrationTimer); celebrationTimer = setTimeout(() => { $('celebration').hidden = true; $('app').classList.remove('shaking'); }, 1800);
   };
-  function resize() { const rect = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 3); model.width = rect.width; model.height = rect.height; canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); fitCamera(); }
+  function resize() { const rect = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 3); model.width = rect.width; model.height = rect.height; canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
   let renderFrame = null, previousFrame = 0;
   function render(frameTime) {
     if (document.hidden) { renderFrame = null; return; }
     if (frameTime - previousFrame < 32) { renderFrame = requestAnimationFrame(render); return; }
     previousFrame = frameTime;
-    const now = Date.now(), date = new Date(now), result = renderer.draw(model, date, now);
+    const now = Date.now(), date = new Date(now), result = renderer.draw(model, date, now, model.ar ? $('camera') : null);
     if (now - lastUI > 200) {
       lastUI = now; $('date').textContent = date.getFullYear() + '.' + pad(date.getMonth() + 1) + '.' + pad(date.getDate()); $('time').textContent = pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
       const az = SkyAstro.normalizeDegrees(model.camera.az);
@@ -271,7 +256,7 @@
     $('mode-sky').setAttribute('aria-pressed', String(!model.ar && !arStarting));
     $('follow').textContent = text(arStarting ? 'cameraStarting' : model.ar ? 'returnChart' : 'startAR');
     $('mode-hint').textContent = text(model.ar ? 'arHint' : 'previewHint');
-    // Lay out the video before play(), while the opaque chart still covers it.
+    // Keep the source video on-screen and playing beneath the opaque canvas.
     $('camera').hidden = !model.ar && !arStarting;
     syncZoom();
     $('app').classList.toggle('ar-mode', model.ar);

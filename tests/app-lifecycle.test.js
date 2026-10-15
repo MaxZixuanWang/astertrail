@@ -66,7 +66,7 @@ function harness({ confirmed = true, secure = true } = {}) {
   const window = Object.assign(eventTarget(), { isSecureContext: secure });
   const values = new Map();
   if (confirmed) values.set('xunxing.observer', JSON.stringify({ latitude: 39.9, longitude: 116.4, label: 'Test' }));
-  const frames = new Map(), timers = new Map();
+  const frames = new Map(), timers = new Map(), draws = [];
   let sequence = 0, trackerCallbacks;
   const sensor = {
     active: false, status: 'stopped', starts: 0, stops: 0,
@@ -95,14 +95,15 @@ function harness({ confirmed = true, secure = true } = {}) {
     setTimeout(callback) { const id = ++sequence; timers.set(id, callback); return id; },
     clearTimeout(id) { timers.delete(id); },
     SkyAstro: Astro, SkyController: Controller, SkySearch: Search, SkyI18n: I18n, SkyCatalog: Catalog,
-    SkyRenderer: class { draw(model, date, time) { return model.sample(date, time); } },
+    SkyRenderer: class { draw(model, date, time, video) { draws.push({ width: model.width, height: model.height, fov: model.fov, video }); return model.sample(date, time); } },
     BrowserSensors: { createTracker(astro, callbacks) { trackerCallbacks = callbacks; return sensor; } },
     BrowserMedia: { createSound() { return sound; }, createCamera() { return camera; } }
   });
   vm.runInContext(copySource, context, { filename: 'modules/web-copy.js' });
   vm.runInContext(appSource, context, { filename: 'app.js' });
   return { app: window.Astertrail, document, window, get, sensor, sensorStatus, pose, camera,
-    cameraRequests, sound, frames, timers };
+    cameraRequests, sound, frames, timers, draws,
+    drawFrame() { const [id, callback] = frames.entries().next().value; frames.delete(id); callback((draws.length + 1) * 64); return draws.at(-1); } };
 }
 
 test('enabling tracking waits for an actual pose, then follows the first bearing without interpolation', async () => {
@@ -133,11 +134,9 @@ test('zoomed chart enters AR with matching video magnification and restores char
   assert.equal(h.app.model.ar, true);
   assert.equal(h.app.model.arReady, true);
   assert.equal(h.app.model.fov, 42);
-  const scale = parseFloat(h.get('camera').style.height) / h.app.model.height;
-  const radians = Math.PI / 180;
-  const projectedOffset = fov => h.app.model.height / (2 * Math.tan(fov * radians / 2)) * Math.tan(10 * radians);
-  assert.ok(Math.abs(projectedOffset(70) * scale - projectedOffset(42)) < 0.01,
-    'camera pixels and sky projection must magnify equally away from the center');
+  const frame = h.drawFrame();
+  assert.equal(frame.video, h.get('camera'), 'the camera source reaches the same renderer as the star chart');
+  assert.equal(frame.fov, 42);
   assert.equal(h.get('zoom').disabled, false);
   assert.equal(h.get('camera').hidden, false);
   h.get('mode-sky').onclick();
@@ -146,6 +145,7 @@ test('zoomed chart enters AR with matching video magnification and restores char
   assert.equal(h.app.model.arReady, false);
   assert.equal(h.app.model.fov, 42);
   assert.equal(h.get('camera').hidden, true);
+  assert.equal(h.drawFrame().video, null, 'returning to the chart no longer samples the camera');
   assert.equal(h.get('camera').style.transform, '');
   assert.equal(h.get('zoom').disabled, false);
 });
@@ -162,26 +162,25 @@ test('AR clamps a wide chart to the unzoomed camera and restores the wider chart
   assert.equal(h.get('zoom').value, '1');
   assert.equal(h.get('zoom-value').textContent, '1.0×');
   assert.match(h.get('toast').textContent, /1×/);
-  assertCameraCoversViewport(h);
+  assertARFrame(h);
   h.get('zoom').value = '0.5'; h.get('zoom').dispatch('input');
   assert.equal(h.app.model.fov, 70, 'AR never shrinks the video below its native view');
-  assertCameraCoversViewport(h);
+  assertARFrame(h);
   h.app.exitAR();
   assert.equal(h.app.model.fov, chartFov);
   assert.equal(h.get('zoom-value').textContent, '0.5×');
   assert.equal(h.get('camera').style.transform, '');
-  assert.equal(h.get('camera').style.width, '');
+  assert.equal(h.get('camera').style.width, undefined);
 });
 
-function assertCameraCoversViewport(h) {
-  const video = h.get('camera'), w = h.app.model.width, height = h.app.model.height;
-  const width = parseFloat(video.style.width), vh = parseFloat(video.style.height);
-  const left = parseFloat(video.style.left), top = parseFloat(video.style.top);
-  assert.ok(width >= w - 1e-8 && vh >= height - 1e-8, 'camera fills the entire star-chart viewport');
-  assert.ok(Math.abs(left + width / 2 - w / 2) < 1e-8);
-  assert.ok(Math.abs(top + vh / 2 - height / 2) < 1e-8);
-  assert.ok(Math.abs(width / vh - video.videoWidth / video.videoHeight) < 1e-8, 'video aspect ratio is preserved');
-  assert.equal(video.style.transform, '', 'native video is sized without a CSS scale transform');
+function assertARFrame(h) {
+  const video = h.get('camera'), frame = h.drawFrame();
+  assert.equal(frame.video, video);
+  assert.equal(frame.width, h.app.model.width);
+  assert.equal(frame.height, h.app.model.height);
+  assert.equal(frame.fov, h.app.model.fov);
+  assert.equal(video.style.width, undefined, 'native video layout no longer controls the AR crop');
+  assert.equal(video.style.transform, '');
 }
 
 test('late camera dimensions and portrait stream changes still fill the AR viewport', async () => {
@@ -191,13 +190,13 @@ test('late camera dimensions and portrait stream changes still fill the AR viewp
   const starting = h.app.startAR();
   h.cameraRequests[0].resolve(true);
   await starting;
-  assert.equal(video.style.width, '');
+  assertARFrame(h);
   video.videoWidth = 720; video.videoHeight = 1280;
   video.dispatch('loadedmetadata');
-  assertCameraCoversViewport(h);
+  assertARFrame(h);
   video.videoWidth = 1280; video.videoHeight = 720;
   video.dispatch('resize');
-  assertCameraCoversViewport(h);
+  assertARFrame(h);
 });
 
 test('AR stays centered and fills the screen after rotation and browser viewport resizing', async () => {
@@ -208,12 +207,12 @@ test('AR stays centered and fills the screen after rotation and browser viewport
   h.get('zoom').value = '2'; h.get('zoom').dispatch('input');
   h.get('sky').getBoundingClientRect = () => ({ width: 812, height: 375 });
   h.app.resize();
-  assertCameraCoversViewport(h);
-  assert.ok(Math.abs(parseFloat(h.get('camera').style.width) - 812 * 2) < 1e-8);
+  assertARFrame(h);
+  assert.equal(h.draws.at(-1).width, 812);
   h.get('sky').getBoundingClientRect = () => ({ width: 375, height: 620 });
   h.app.resize();
-  assertCameraCoversViewport(h);
-  assert.ok(Math.abs(parseFloat(h.get('camera').style.height) - 620 * 2) < 1e-8);
+  assertARFrame(h);
+  assert.equal(h.draws.at(-1).height, 620);
 });
 
 test('the zoom slider changes chart scale and AR camera scale together without overwriting chart zoom', async () => {
@@ -232,8 +231,8 @@ test('the zoom slider changes chart scale and AR camera scale together without o
   await starting;
   setZoom(3);
   assert.ok(Math.abs(h.app.model.fov - fovAtScale(3)) < 1e-8);
-  const scale = parseFloat(h.get('camera').style.height) / h.app.model.height;
-  assert.ok(Math.abs(scale - 3) < 1e-8);
+  assertARFrame(h);
+  assert.ok(Math.abs(h.draws.at(-1).fov - fovAtScale(3)) < 1e-8);
   assert.equal(h.get('zoom-value').textContent, '3.0×');
   h.app.exitAR();
   assert.equal(h.app.model.fov, chartFov);

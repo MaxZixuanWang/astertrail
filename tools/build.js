@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const ROOT_FILES = ['.nojekyll', 'index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'sw.js', 'DATA_SOURCES.md', 'DATA_SOURCES.en.md'];
+const ROOT_FILES = ['.nojekyll', 'index.html', 'update.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'sw.js', 'DATA_SOURCES.md', 'DATA_SOURCES.en.md'];
 const ROOT_DIRECTORIES = ['styles', 'modules', 'data', 'assets', 'icons', 'licenses'];
 
 function collect(root) {
@@ -34,7 +34,9 @@ function build(source = path.resolve(__dirname, '..'), destination = path.join(s
   const digest = crypto.createHash('sha256');
   for (const [file, contentsBuffer] of contents) digest.update(file).update('\0').update(contentsBuffer).update('\0');
   const version = digest.digest('hex').slice(0, 16);
-  const precache = files.filter(file => file !== 'sw.js' && file !== '.nojekyll').map(file => './' + file);
+  contents.set('app.js', Buffer.from(contents.get('app.js').toString('utf8').replaceAll('__ASTERTRAIL_BUILD__', version.slice(0, 8))));
+  // Keep the recovery page online-only, including for already cached releases.
+  const precache = files.filter(file => !['sw.js', '.nojekyll', 'update.html'].includes(file)).map(file => './' + file);
   let worker = contents.get('sw.js').toString('utf8');
   if (!worker.includes('__ASTERTRAIL_CACHE_VERSION__') || !worker.includes('__ASTERTRAIL_PRECACHE__')) {
     throw new Error('Service worker template placeholders are missing.');

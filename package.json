@@ -1,6 +1,6 @@
 {
   "name": "astertrail-web",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "private": true,
   "description": "追星人 · Astertrail — an offline-ready sky guide",
   "scripts": {

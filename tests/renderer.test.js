@@ -18,7 +18,9 @@ function canvasMock() {
     closePath() { this.currentPath.push(['close']); },
     stroke() { this.calls.push({ operation: 'stroke', color: this.strokeStyle, path: this.currentPath.slice() }); },
     fill() { this.calls.push({ operation: 'fill', color: this.fillStyle, path: this.currentPath.slice() }); },
-    fillRect(...args) { this.calls.push({ operation: 'rect', args }); },
+    clearRect(...args) { this.calls.push({ operation: 'clear', args }); },
+    fillRect(...args) { this.calls.push({ operation: 'rect', args, color: this.fillStyle }); },
+    drawImage(...args) { this.calls.push({ operation: 'image', args }); },
     fillText(text, x, y) { this.calls.push({ operation: 'text', text, x, y, color: this.fillStyle }); },
     measureText(text) { return { width: text.length * 8 }; },
     save() {}, restore() {}
@@ -119,6 +121,68 @@ test('position cache refreshes immediately when observer changes', () => {
   controller.setObserver(-33.9, 151.2);
   renderer.updatePositions(controller, date);
   assert.notDeepEqual(renderer.stars[0].vector, first);
+});
+
+function cameraScene(video, { width = 393, height = 742, fov = 70, ar = true } = {}) {
+  const ctx = canvasMock(), emptyCatalog = { stars: [], messier: [], constellations: [] };
+  const controller = new Controller(emptyCatalog);
+  Object.assign(controller, { width, height, fov, ar });
+  new Renderer(ctx, emptyCatalog).draw(controller, new Date('2026-10-15T12:00:00Z'), 0, video);
+  return ctx.calls;
+}
+
+test('AR camera source is centered and covers portrait and landscape viewports at every zoom', () => {
+  for (const [videoWidth, videoHeight] of [[1280, 720], [720, 1280]]) {
+    for (const [width, height] of [[393, 742], [742, 393]]) {
+      for (const zoom of [1, 2, 3]) {
+        const fov = 360 / Math.PI * Math.atan(Math.tan(35 * Math.PI / 180) / zoom);
+        const video = { readyState: 2, videoWidth, videoHeight };
+        const images = cameraScene(video, { width, height, fov }).filter(call => call.operation === 'image');
+        assert.equal(images.length, 1, 'one camera frame per chart frame');
+        const [source, sx, sy, sw, sh, dx, dy, dw, dh] = images[0].args;
+        assert.equal(source, video);
+        assert.deepEqual([dx, dy, dw, dh], [0, 0, width, height]);
+        assert.ok(sx >= -1e-8 && sy >= -1e-8 && sw > 0 && sh > 0);
+        assert.ok(sx + sw <= videoWidth + 1e-8 && sy + sh <= videoHeight + 1e-8);
+        assert.ok(Math.abs(sx * 2 + sw - videoWidth) < 1e-8);
+        assert.ok(Math.abs(sy * 2 + sh - videoHeight) < 1e-8);
+        assert.ok(Math.abs(sw / sh - width / height) < 1e-8, 'preserve the camera aspect ratio');
+        assert.ok(Math.abs(Math.max(sw / videoWidth, sh / videoHeight) - 1 / zoom) < 1e-8, 'zoom crops the centered cover frame');
+      }
+    }
+  }
+});
+
+test('AR paints an opaque background, then camera, shade and star overlays in the same canvas', () => {
+  const calls = cameraScene({ readyState: 4, videoWidth: 1280, videoHeight: 720 });
+  assert.deepEqual(calls[0], { operation: 'rect', args: [0, 0, 393, 742], color: Renderer.palette.sky });
+  assert.equal(calls[1].operation, 'image');
+  assert.deepEqual(calls[2], { operation: 'rect', args: [0, 0, 393, 742], color: Renderer.palette.arShade });
+  assert.ok(calls.findIndex(call => call.operation === 'stroke') > 2);
+  assert.equal(calls.some(call => call.operation === 'clear'), false, 'native video cannot show through the canvas');
+});
+
+test('AR waits for usable video frames and never shrinks a camera frame below full cover', () => {
+  for (const video of [undefined, { readyState: 1, videoWidth: 1280, videoHeight: 720 },
+    { readyState: 2, videoWidth: 0, videoHeight: 720 }, { readyState: 2, videoWidth: 1280, videoHeight: 0 }]) {
+    const calls = cameraScene(video);
+    assert.equal(calls.some(call => call.operation === 'image'), false);
+    assert.deepEqual(calls[0], { operation: 'rect', args: [0, 0, 393, 742], color: Renderer.palette.sky });
+  }
+  const video = { readyState: 2, videoWidth: 1280, videoHeight: 720 };
+  const atOne = cameraScene(video).find(call => call.operation === 'image');
+  const wide = cameraScene(video, { fov: 110 }).find(call => call.operation === 'image');
+  assert.ok(atOne && wide, 'ready camera frames are drawn');
+  assert.deepEqual(wide.args, atOne.args, 'a wide chart FOV cannot leave empty margins around the camera');
+});
+
+test('chart mode ignores camera frames and retains its opaque sky background', () => {
+  const calls = cameraScene({ readyState: 4, videoWidth: 1280, videoHeight: 720 }, { ar: false });
+  assert.equal(calls.some(call => call.operation === 'image'), false);
+  assert.equal(calls.some(call => call.operation === 'clear'), false);
+  assert.equal(calls[0].operation, 'rect');
+  assert.deepEqual(calls[0].args, [0, 0, 393, 742]);
+  assert.equal(typeof calls[0].color.addColorStop, 'function');
 });
 
 test('one renderer switches cached star, constellation, horizon and guide labels between languages', () => {

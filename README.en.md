@@ -22,6 +22,7 @@ Slide the zoom control on the right up to magnify or down to widen the view. You
 - Android: Chrome menu → Install app / Add to Home screen. Settings also shows an install button when the browser supports an installation prompt.
 - Once Settings shows that the offline sky chart is ready, the catalogs, search, calculations, portrait, and sound have been cached. Browsers may clear their caches; offline location availability depends on the device.
 - When a new version is available, Settings shows an update button. The app will not suddenly reload while you use it; you can accept the update after returning to the star chart.
+- If an older version persists, open the [update page](https://maxzixuanwang.github.io/astertrail/update.html) and tap “Update & open”. Your language and observing location are kept. Check the version at the bottom of Settings.
 
 ## Orientation and camera
 
